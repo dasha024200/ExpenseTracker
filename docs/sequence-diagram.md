@@ -1,98 +1,62 @@
-# ExpenseTracker - Sequence Diagram
+# ExpenseTracker - Sequence Diagrams
 
-## Діаграма послідовності для сценарію "Додавання витрати"
+## Сценарій: Додавання витрати
 
 ```mermaid
 sequenceDiagram
     actor User
     participant Console as Console UI
     participant Service as ExpenseService
-    participant Repo as IExpenseRepository
-    participant Domain as Expense (Domain)
-    participant Memory as In-Memory Storage
+    participant Repository as IExpenseRepository
+    participant Storage as In-Memory Storage
 
     User->>Console: Вводить суму, категорію, опис
-    Console->>Service: AddExpense(amount, category, description)
-    Service->>Domain: Expense.Create(amount, category, description)
-    Domain->>Domain: Валідація (перевірка суми > 0)
-    Domain-->>Service: Повертає Expense
-    Service->>Repo: Add(expense)
-    Repo->>Memory: Зберігає витрату в список
-    Repo-->>Service: Підтвердження
+    Console->>Service: AddExpense(amount, category, date, description)
+    Service->>Service: Expense.Create(amount, category, date, description)
+    Service->>Repository: Add(expense)
+    Repository->>Storage: Зберігає витрату в список
+    Storage-->>Repository: Підтвердження збереження
+    Repository-->>Service: Повертає результат
     Service-->>Console: Успіх
     Console-->>User: "Витрату додано успішно"
 ```
 
-## Діаграма послідовності для сценарію "Перегляд витрат"
+![Додавання витрати](assets/Додавання витрати.png)
+
+## Сценарій: Отримання статистики по категоріям
 
 ```mermaid
 sequenceDiagram
     actor User
     participant Console as Console UI
     participant Service as ExpenseService
-    participant Repo as IExpenseRepository
-    participant Memory as In-Memory Storage
-
-    User->>Console: Запитує витрати за період
-    Console->>Service: GetExpensesByMonth(month, year)
-    Service->>Repo: GetByDateRange(startDate, endDate)
-    Repo->>Memory: Отримує витрати
-    Memory-->>Repo: Повертає список витрат
-    Repo-->>Service: Повертає IEnumerable~Expense~
-    Service-->>Console: Витрати
-    Console-->>User: Виводить відформатований список
-```
-
-## Діаграма послідовності для сценарію "Отримання статистики"
-
-```mermaid
-sequenceDiagram
-    actor User
-    participant Console as Console UI
-    participant Service as ExpenseService
-    participant Repo as IExpenseRepository
+    participant Repository as IExpenseRepository
     participant LINQ as LINQ Queries
 
     User->>Console: Запитує статистику по категоріям
     Console->>Service: GetCategoryStatistics()
-    Service->>Repo: GetAll()
-    Repo-->>Service: IEnumerable~Expense~
+    Service->>Repository: GetAll()
+    Repository-->>Service: IEnumerable~Expense~
     Service->>LINQ: GroupBy(e => e.Category).Sum(e => e.Amount)
     LINQ-->>Service: Dictionary~Category, decimal~
-    Service-->>Console: Статистика
+    Service-->>Console: Статистика по категоріям
     Console-->>User: Виводить звіт
 ```
 
+![Отримання статистики](assets/Отримання статистики.png)
+
 ## Архітектурні переходи між шарами
 
+```mermaid
+flowchart TD
+    A[Console UI Layer<br/>- Читає введення користувача<br/>- Форматує вихід] --> B[Application Service Layer<br/>- ExpenseService<br/>- Бізнес-логіка<br/>- Орхестрація операцій]
+    B --> C[Domain Model Layer<br/>- Expense (entity)<br/>- Category (value object)<br/>- Бізнес-правила]
+    C --> D[Infrastructure & Repository Layer<br/>- InMemoryExpenseRepository<br/>- InMemoryCategoryRepository<br/>- Зберігання даних]
+
+    style A fill:#e1f5fe,stroke:#0097a7,stroke-width:2px
+    style B fill:#f3e5f5,stroke:#ff9800,stroke-width:2px
+    style C fill:#e8f5e9,stroke:#43a047,stroke-width:2px
+    style D fill:#fff3e0,stroke:#f57c00,stroke-width:2px
 ```
-┌─────────────────────────────────────────────┐
-│           Console UI Layer                  │
-│ - Читає введення користувача                │
-│ - Форматує вихід                            │
-└──────────────┬──────────────────────────────┘
-               │
-               ▼
-┌─────────────────────────────────────────────┐
-│      Application Service Layer              │
-│ - ExpenseService                            │
-│ - Бізнес-логіка                             │
-│ - Орхестрація операцій                      │
-└──────────────┬──────────────────────────────┘
-               │
-               ▼
-┌─────────────────────────────────────────────┐
-│       Domain Model Layer                    │
-│ - Expense (entity)                          │
-│ - Category (value object)                   │
-│ - Бізнес-правила                            │
-└──────────────┬──────────────────────────────┘
-               │
-               ▼
-┌─────────────────────────────────────────────┐
-│    Infrastructure & Repository Layer        │
-│ - InMemoryExpenseRepository                 │
-│ - InMemoryCategoryRepository                │
-│ - Зберігання даних                          │
-└─────────────────────────────────────────────┘
-```
+
+![Архітектурні переходи між шарами](assets/Архітектурні переходи між шарами.png)
