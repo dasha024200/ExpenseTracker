@@ -4,8 +4,8 @@ using ExpenseTracker.Domain;
 
 /// <summary>
 /// In-memory репозиторій для витрат
-/// Використовується на першій ітерації для тестування логіки без persistence
-/// На Lab 35 буде замінено на FileSystemExpenseRepository
+/// Використовується як альтернативне сховище для локального тестування
+/// Має просту реалізацію без persistence
 /// </summary>
 public class InMemoryExpenseRepository : IExpenseRepository
 {

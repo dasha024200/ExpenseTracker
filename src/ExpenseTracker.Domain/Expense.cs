@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace ExpenseTracker.Domain;
 
 /// <summary>
@@ -12,9 +14,10 @@ public class Expense
     public string Description { get; }
 
     /// <summary>
-    /// Приватний конструктор для запобігання створення некоректних об'єктів
+    /// Конструктор для створення та десеріалізації витрати
     /// </summary>
-    private Expense(int id, decimal amount, Category category, DateTime date, string description)
+    [JsonConstructor]
+    public Expense(int id, decimal amount, Category category, DateTime date, string description)
     {
         ValidateAmount(amount);
         

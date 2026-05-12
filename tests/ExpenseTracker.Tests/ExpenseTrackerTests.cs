@@ -203,4 +203,84 @@ public class ExpenseServiceTests
         // Assert
         Assert.Equal(200, average);
     }
+
+    /// <summary>
+    /// Тест 11: Перевірити пошук витрат за описом
+    /// </summary>
+    [Fact]
+    public void SearchExpensesByDescription_ReturnsMatchingExpenses()
+    {
+        // Arrange
+        var service = CreateService();
+        var category = service.GetAllCategories().First();
+
+        service.AddExpense(100, category, DateTime.Now, "Обід у кафе");
+        service.AddExpense(200, category, DateTime.Now, "Книга для навчання");
+
+        // Act
+        var results = service.SearchExpensesByDescription("кафе").ToList();
+
+        // Assert
+        Assert.Single(results);
+        Assert.Contains("кафе", results[0].Description, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Тест 12: Перевірити сортування витрат за сумою
+    /// </summary>
+    [Fact]
+    public void GetExpensesSortedByAmount_ReturnsSortedExpenses()
+    {
+        // Arrange
+        var service = CreateService();
+        var category = service.GetAllCategories().First();
+
+        service.AddExpense(300, category, DateTime.Now, "Витрата 1");
+        service.AddExpense(100, category, DateTime.Now, "Витрата 2");
+        service.AddExpense(200, category, DateTime.Now, "Витрата 3");
+
+        // Act
+        var ascending = service.GetExpensesSortedByAmount(true).ToList();
+        var descending = service.GetExpensesSortedByAmount(false).ToList();
+
+        // Assert
+        Assert.Equal(100, ascending[0].Amount);
+        Assert.Equal(300, descending[0].Amount);
+    }
+
+    /// <summary>
+    /// Тест 13: Перевірити збереження та завантаження витрат у JSON
+    /// </summary>
+    [Fact]
+    public void SaveAndLoadExpenses_PersistsDataToJson()
+    {
+        // Arrange
+        var expenseRepo = new FileSystemExpenseRepository();
+        var categoryRepo = new InMemoryCategoryRepository();
+        var service = new ExpenseService(expenseRepo, categoryRepo);
+        var category = service.GetAllCategories().First();
+        var tempFile = Path.Combine(Path.GetTempPath(), $"expense_tracker_{Guid.NewGuid()}.json");
+
+        try
+        {
+            service.AddExpense(100, category, new DateTime(2026, 1, 1), "Тестова витрата");
+            var saveResult = service.SaveExpenses(tempFile);
+            Assert.IsType<Result.Success>(saveResult);
+
+            var loadRepo = new FileSystemExpenseRepository();
+            var loadService = new ExpenseService(loadRepo, categoryRepo);
+            var loadResult = loadService.LoadExpenses(tempFile);
+            Assert.IsType<Result.Success>(loadResult);
+
+            var loadedExpenses = loadService.GetAllExpenses().ToList();
+            Assert.Single(loadedExpenses);
+            Assert.Equal(100, loadedExpenses[0].Amount);
+            Assert.Equal("Тестова витрата", loadedExpenses[0].Description);
+        }
+        finally
+        {
+            if (File.Exists(tempFile))
+                File.Delete(tempFile);
+        }
+    }
 }

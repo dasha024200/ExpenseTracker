@@ -8,7 +8,7 @@ sequenceDiagram
     participant Console as Console UI
     participant Service as ExpenseService
     participant Repository as IExpenseRepository
-    participant Storage as In-Memory Storage
+    participant Storage as Storage
 
     User->>Console: Вводить суму, категорію, опис
     Console->>Service: AddExpense(amount, category, date, description)
@@ -45,13 +45,33 @@ sequenceDiagram
 
 ![Отримання статистики](assets/Отримання статистики.png)
 
+## Сценарій: Збереження витрат у JSON
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Console as Console UI
+    participant Service as ExpenseService
+    participant Persistence as IExpensePersistence
+    participant File as JSON File
+
+    User->>Console: Вибирає "Зберегти витрати у JSON"
+    Console->>Service: SaveExpenses(filePath)
+    Service->>Persistence: Save(filePath)
+    Persistence->>File: Записує JSON
+    File-->>Persistence: Підтвердження збереження
+    Persistence-->>Service: Повертає успіх
+    Service-->>Console: Показує повідомлення про успіх
+    Console-->>User: "Витрати збережено"
+```
+
 ## Архітектурні переходи між шарами
 
 ```mermaid
 flowchart TD
     A[Console UI Layer<br/>- Читає введення користувача<br/>- Форматує вихід] --> B[Application Service Layer<br/>- ExpenseService<br/>- Бізнес-логіка<br/>- Орхестрація операцій]
     B --> C[Domain Model Layer<br/>- Expense (entity)<br/>- Category (value object)<br/>- Бізнес-правила]
-    C --> D[Infrastructure & Repository Layer<br/>- InMemoryExpenseRepository<br/>- InMemoryCategoryRepository<br/>- Зберігання даних]
+    C --> D[Infrastructure & Repository Layer<br/>- InMemoryExpenseRepository<br/>- FileSystemExpenseRepository<br/>- InMemoryCategoryRepository<br/>- Зберігання даних]
 
     style A fill:#e1f5fe,stroke:#0097a7,stroke-width:2px
     style B fill:#f3e5f5,stroke:#ff9800,stroke-width:2px
