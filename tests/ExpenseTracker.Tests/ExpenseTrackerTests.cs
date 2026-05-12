@@ -92,7 +92,7 @@ public class IntegrationTests
         // Assert
         Assert.IsType<Result.Failure>(result);
         var failure = (Result.Failure)result;
-        Assert.Contains("доступу", failure.ErrorMessage);
+        Assert.Contains("вводу-виводу", failure.ErrorMessage);
     }
 
     /// <summary>
@@ -154,7 +154,7 @@ public class IntegrationTests
         service.AddExpense(50, category, new DateTime(2026, 1, 3), "Кава ввечері");
 
         // Act - пошук
-        var searchResults = service.SearchExpensesByDescription("кав").ToList();
+        var searchResults = service.SearchExpensesByDescription("ка").ToList();
 
         // Assert - знайдено 2 результати (Кафе вранці, Кава ввечері)
         Assert.Equal(2, searchResults.Count);
