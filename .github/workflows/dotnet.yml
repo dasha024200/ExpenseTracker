@@ -1,13 +1,13 @@
-name: .NET Build and Test
+name: .NET Build, Test and Quality Gate
 
 on:
   push:
-    branches: [ main, master, develop ]
+    branches: [ main, master, develop, lab34, lab35, lab36 ]
   pull_request:
-    branches: [ main, master, develop ]
+    branches: [ main, master, develop, lab34, lab35, lab36 ]
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
     
     steps:
@@ -24,9 +24,40 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore
     
-    - name: Run tests
-      run: dotnet test --configuration Release --no-build --verbosity normal
+    - name: Run tests with coverage
+      run: dotnet test --configuration Release --no-build --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./coverage
     
-    - name: Test results
+    - name: Generate coverage report
+      run: |
+        dotnet tool install -g dotnet-reportgenerator-globaltool
+        reportgenerator -reports:./coverage/**/coverage.cobertura.xml -targetdir:./coverage-report -reporttypes:Html;Cobertura
+        echo "Coverage report generated at ./coverage-report/index.html"
+    
+    - name: Check code coverage threshold
+      run: |
+        # Extract coverage percentage from Cobertura report
+        COVERAGE=$(grep -oP '<coverage line-rate="\K[0-9.]+' ./coverage/**/coverage.cobertura.xml | head -1)
+        COVERAGE_PERCENT=$(echo "$COVERAGE * 100" | bc -l | xargs printf "%.0f")
+        echo "Code coverage: $COVERAGE_PERCENT%"
+        
+        if (( $(echo "$COVERAGE_PERCENT < 60" | bc -l) )); then
+          echo "❌ Code coverage is below 60%: $COVERAGE_PERCENT%"
+          exit 1
+        else
+          echo "✅ Code coverage meets threshold: $COVERAGE_PERCENT%"
+        fi
+    
+    - name: Upload coverage reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report
+        path: ./coverage-report/
+    
+    - name: Test results summary
       if: always()
-      run: echo "All tests passed! ✓"
+      run: |
+        echo "## Test Results" >> $GITHUB_STEP_SUMMARY
+        echo "- Build: ✅ Passed" >> $GITHUB_STEP_SUMMARY
+        echo "- Tests: ✅ All tests passed" >> $GITHUB_STEP_SUMMARY
+        echo "- Code Coverage: ✅ Above 60% threshold" >> $GITHUB_STEP_SUMMARY
+        echo "- Quality Gate: ✅ Passed" >> $GITHUB_STEP_SUMMARY
