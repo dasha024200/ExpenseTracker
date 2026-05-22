@@ -80,8 +80,8 @@ public class IntegrationTests
     [Fact]
     public void ExpenseService_SaveExpenses_InvalidPath_ReturnsFailure()
     {
-        // Arrange
-        var invalidPath = @"\\nonexistent\server\share\file.json";
+        // Arrange (use platform-agnostic invalid path)
+        var invalidPath = string.Empty; // empty path is invalid on all platforms
         var expenseRepo = new FileSystemExpenseRepository();
         var categoryRepo = new InMemoryCategoryRepository();
         var service = new ExpenseService(expenseRepo, categoryRepo);
@@ -92,7 +92,7 @@ public class IntegrationTests
         // Assert
         Assert.IsType<Result.Failure>(result);
         var failure = (Result.Failure)result;
-        Assert.Contains("вводу-виводу", failure.ErrorMessage);
+        Assert.Contains("Шлях до файлу", failure.ErrorMessage);
     }
 
     /// <summary>

@@ -17,6 +17,15 @@ jobs:
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: '8.0.x'
+
+    - name: CI diagnostics - dotnet info
+      run: |
+        dotnet --info
+        dotnet --list-sdks || true
+        dotnet --list-runtimes || true
+        uname -a || true
+        lsb_release -a || true
+        ls -la
     
     - name: Restore dependencies
       run: dotnet restore
@@ -24,8 +33,10 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore
     
-    - name: Run tests
-      run: dotnet test --configuration Release --no-build --verbosity normal
+    - name: Run tests (detailed)
+      run: |
+        dotnet test --configuration Release --no-build --verbosity detailed
+        echo "--- end of dotnet test ---"
     
     - name: Test Summary
       if: always()
