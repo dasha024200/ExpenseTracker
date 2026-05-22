@@ -55,14 +55,29 @@ public class FileSystemExpenseRepository : IExpenseRepository, IExpensePersisten
         if (string.IsNullOrWhiteSpace(filePath))
             throw new ArgumentException("Шлях до файлу не може бути порожнім", nameof(filePath));
 
-        var directory = Path.GetDirectoryName(filePath);
-        if (!string.IsNullOrWhiteSpace(directory))
+        try
         {
-            Directory.CreateDirectory(directory);
-        }
+            var directory = Path.GetDirectoryName(filePath);
+            if (!string.IsNullOrWhiteSpace(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
 
-        var json = JsonSerializer.Serialize(_expenses, _jsonOptions);
-        File.WriteAllText(filePath, json);
+            var json = JsonSerializer.Serialize(_expenses, _jsonOptions);
+            File.WriteAllText(filePath, json);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            throw new InvalidOperationException($"Немає доступу до запису у файл: {filePath}", ex);
+        }
+        catch (IOException ex)
+        {
+            throw new InvalidOperationException($"Помилка вводу-виводу при збереженні файлу: {filePath}", ex);
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidOperationException($"Помилка серіалізації даних у JSON: {ex.Message}", ex);
+        }
     }
 
     public void Load(string filePath)
@@ -70,17 +85,36 @@ public class FileSystemExpenseRepository : IExpenseRepository, IExpensePersisten
         if (string.IsNullOrWhiteSpace(filePath))
             throw new ArgumentException("Шлях до файлу не може бути порожнім", nameof(filePath));
 
-        if (!File.Exists(filePath))
-            throw new FileNotFoundException("Файл з витратами не знайдено", filePath);
+        try
+        {
+            if (!File.Exists(filePath))
+                throw new FileNotFoundException("Файл з витратами не знайдено", filePath);
 
-        var json = File.ReadAllText(filePath);
-        var expenses = JsonSerializer.Deserialize<List<Expense>>(json, _jsonOptions);
+            var json = File.ReadAllText(filePath);
+            var expenses = JsonSerializer.Deserialize<List<Expense>>(json, _jsonOptions);
 
-        if (expenses == null)
-            throw new InvalidOperationException("Не вдалося десеріалізувати витрати з файлу");
+            if (expenses == null)
+                throw new InvalidOperationException("Не вдалося десеріалізувати витрати з файлу");
 
-        _expenses.Clear();
-        _expenses.AddRange(expenses.OrderBy(e => e.Id));
-        _nextId = _expenses.Any() ? _expenses.Max(e => e.Id) + 1 : 1;
+            _expenses.Clear();
+            _expenses.AddRange(expenses.OrderBy(e => e.Id));
+            _nextId = _expenses.Any() ? _expenses.Max(e => e.Id) + 1 : 1;
+        }
+        catch (FileNotFoundException)
+        {
+            throw; // Перекидаємо далі
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            throw new InvalidOperationException($"Немає доступу до читання файлу: {filePath}", ex);
+        }
+        catch (IOException ex)
+        {
+            throw new InvalidOperationException($"Помилка вводу-виводу при читанні файлу: {filePath}", ex);
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidOperationException($"Помилка десеріалізації JSON з файлу: {ex.Message}", ex);
+        }
     }
 }

@@ -59,21 +59,21 @@
 
 ## Ітерація 3 (Lab 36) - Quality Gate, Unit/Integration Tests, Fault Handling
 
-**Статус**: Не розпочата
+**Статус**: Завершено
 
 ### Завдання:
-- [ ] Написати integration tests
-- [ ] Реалізувати comprehensive error handling
-- [ ] Встановити code coverage (мінімум 60%)
-- [ ] Налаштувати Quality Gate у CI
-- [ ] Документувати тестову стратегію
+- [x] Написати integration tests
+- [x] Реалізувати comprehensive error handling
+- [x] Встановити code coverage (мінімум 60%)
+- [x] Налаштувати Quality Gate у CI
+- [x] Документувати тестову стратегію
 
 ### Очікувані артефакти:
-- [ ] TESTING.md (тестова стратегія)
-- [ ] test-strategy.md (детальна стратегія)
-- [ ] test-matrix.md (матриця тестів)
-- [ ] CI з тестами та quality gate
-- [ ] Code coverage report
+- [x] TESTING.md (тестова стратегія)
+- [x] test-strategy.md (детальна стратегія)
+- [x] test-matrix.md (матриця тестів)
+- [x] CI з тестами та quality gate
+- [x] Code coverage report
 
 ### Scope:
 - **Unit Tests**: Domain и Application layer
